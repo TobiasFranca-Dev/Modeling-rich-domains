@@ -10,17 +10,53 @@ namespace PaymentContext.Tests.Entities
     [TestClass]
     public class StudentTests
     {
-        [TestMethod]
-        public void AddSubscription()
+        private readonly Name _name;
+        private readonly Email _email;
+        private readonly Document _document;
+        private readonly Address _address;
+        private readonly Student _student;
+        private readonly Subscription _subscription;
+
+
+        public StudentTests()
         {
+            _name = new Name("Bruce", "Wayne");
+            _document = new Document("15248585015", EDocumentType.CPF);
+            _email = new Email("batman@dc.com");
+            _address = new Address("Rua 1", "1234", "Bairro legal", "Gotham", "ES", "BR", "13400905");
+            _student = new Student(_name, _document, _email);
+            _subscription = new Subscription(DateTime.Now.AddYears(1));
 
-            var name = new Name("Tobias", "França");
-            var document = new Document("12312312312", EDocumentType.CPF);
-            var email = new Email("email@email.com");
-            var subscription = new Subscription(DateTime.Now.AddDays(30));
+        }
 
-            var student = new Student(name, document, email);
-            student.AddSubscription(subscription);
+        [TestMethod]
+        public void ShouldReturnErrorWhenHadActiveSubscription()
+        {
+            var payment = new PayPalPayment("12345678", DateTime.Now, DateTime.Now.AddDays(5), 10, 10, "Wayne Corp", _document, _address, _email);
+
+            _subscription.AddPayment(payment);
+            _student.AddSubscription(_subscription);
+            _student.AddSubscription(_subscription);
+
+            Assert.IsTrue(_student.Invalid);
+        }
+
+
+        [TestMethod]
+        public void ShouldReturnErrorWheSubscriptionHasNoPayment()
+        {
+            _student.AddSubscription(_subscription);
+            Assert.IsFalse(_student.Invalid);
+        }
+
+
+        [TestMethod]
+        public void ShouldReturnSuccessWhenAddSubscription()
+        {
+            var payment = new PayPalPayment("12345678", DateTime.Now, DateTime.Now.AddDays(5), 10, 10, "Wayne Corp", _document, _address, _email);
+            _subscription.AddPayment(payment);
+            _student.AddSubscription(_subscription);
+            Assert.IsFalse(_student.Valid);
         }
     }
 }
